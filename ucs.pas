@@ -13,7 +13,7 @@ type
 
     { tIQCriticalSection }
 
-    tIQCriticalSection = class(tCriticalSection)
+    tCS = class(tCriticalSection)
     private
       class var FLogLonger: Integer;
       class var FTimeOutException: Integer;
@@ -32,12 +32,6 @@ type
        property LockName : String read FLockName write SetLockName;
     end;
 
-    tCS = tIQCriticalSection;
-
-{$MACRO ON}
-{$I uCSmacro.inc}
-{$DEFINE NewSync}
-
 function InitCS : tCS;
 procedure EnterCS( CS : tCS; const pLockName : string);
 procedure LeaveCS( CS : tCS);
@@ -46,13 +40,11 @@ procedure DoneCS( CS : tCS);
 implementation
 
 uses
-  DateUtils
-{$IFDEF LOG},uLog{$ENDIF}
-  ;
+  DateUtils;
 
 function InitCS: tCS;
 begin
-   result := tIQCriticalSection.Create;
+   result := tCS.Create;
 end;
 
 procedure EnterCS( CS: tCS; const pLockName : string);
@@ -72,7 +64,7 @@ end;
 
 { tIQCriticalSection }
 
-constructor tIQCriticalSection.Create;
+constructor tCS.Create;
 begin
    inherited;
    LogLonger := 50;
@@ -80,11 +72,10 @@ begin
    TimeOutException := 5000;
 end;
 
-procedure tIQCriticalSection.Enter(const pLockName: string);
+procedure tCS.Enter(const pLockName: string);
 var start, LogAfter, TimeOutAfter : tDateTime;
     logafterdone : boolean;
 begin
-{$IFDEF NewSync}
    start := now;
    LogAfter := DateUtils.IncMilliSecond(start,fLogLonger);
    TimeOutAfter := DateUtils.IncMilliSecond(start,fTimeOutException);
@@ -108,17 +99,14 @@ begin
    end;
 
    FLockName:=pLockName;
-{$ELSE}
-   inherited Enter;
-{$ENDIF}
 end;
 
-procedure tIQCriticalSection.Leave;
+procedure tCS.Leave;
 begin
    inherited Leave;
 end;
 
-procedure tIQCriticalSection.SetLockName(AValue: String);
+procedure tCS.SetLockName(AValue: String);
 begin
   if FLockName=AValue then Exit;
   FLockName:=AValue;
